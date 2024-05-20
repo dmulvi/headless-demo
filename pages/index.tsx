@@ -1,9 +1,48 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import type { NextPage } from 'next';
-import Head from 'next/head';
-import styles from '../styles/Home.module.css';
+"use client";
+
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import type { NextPage } from "next";
+import Head from "next/head";
+import styles from "../styles/Home.module.css";
+import { useSendTransaction } from "wagmi";
+import { createWalletClient, custom } from "viem";
+import { sepolia } from "viem/chains";
 
 const Home: NextPage = () => {
+  const { data: hash, sendTransactionAsync } = useSendTransaction();
+
+  const client =
+    typeof window !== "undefined"
+      ? createWalletClient({
+          chain: sepolia,
+          transport: custom(window.ethereum!),
+        })
+      : null;
+
+  const sendSerializedTransaction = async () => {
+    const serializedTransaction =
+      "0x02f9012683aa36a744848917370085080992ce6c82629c94a105c311fa72b8fb78c992ecbdb8b02ea5bd394d869a9d359ca000b8f465794a68624763694f694a49557a49314e694973496e523563434936496b705856434a392e65794a756232356a5a534936496a4d3559544e6d4d444d334c544d7a4e6d51744e4441305a5331684d6a45774c575268593249335957526b5a4456694e794973496d39795a4756795357526c626e52705a6d6c6c63694936496d4e6a4e44426c4e6d466d4c5759345a474d744e47466a4d6930345a5449324c5751354d57457a4d6d59794e7a466a5a694973496d6c68644349364d5463784e546b334f54557a4e33302e662d4949646c653375314c58634c7845765438754e336d74786370764a686f31384a5a4b76483768456659c0";
+
+    const hash = await client.sendRawTransaction({
+      serializedTransaction,
+    });
+
+    console.log(hash);
+  };
+
+  const signAndSendTransaction = async () => {
+    const result = await sendTransactionAsync({
+      to: "0xa105C311fA72b8Fb78c992EcbDb8b02Ea5bd394d",
+      data: "0x65794a68624763694f694a49557a49314e694973496e523563434936496b705856434a392e65794a756232356a5a534936496a417a596a4e6b5954597a4c574e6b596a49744e446b355a433035596a6b794c5751304d6d52695a6a64694d4442694d694973496d39795a4756795357526c626e52705a6d6c6c63694936496a6b315a6a6c68596a526b4c5445344f4441744e445134596930344e5455324c57466c4f4459794d546b78596d526c4d434973496d6c68644349364d5463784e5459304e4445784d48302e61363271736151492d394e634d375976786c473948706b65343657445a42745839425774767156434c7173",
+      value: BigInt(180000000000000),
+      chainId: 11155111,
+    });
+
+    console.log(result);
+
+    return result;
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -18,65 +57,14 @@ const Home: NextPage = () => {
       <main className={styles.main}>
         <ConnectButton />
 
-        <h1 className={styles.title}>
-          Welcome to <a href="">RainbowKit</a> + <a href="">wagmi</a> +{' '}
-          <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+        <button onClick={() => signAndSendTransaction()}>
+          Send transaction
+        </button>
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.tsx</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a className={styles.card} href="https://rainbowkit.com">
-            <h2>RainbowKit Documentation &rarr;</h2>
-            <p>Learn how to customize your wallet connection flow.</p>
-          </a>
-
-          <a className={styles.card} href="https://wagmi.sh">
-            <h2>wagmi Documentation &rarr;</h2>
-            <p>Learn how to interact with Ethereum.</p>
-          </a>
-
-          <a
-            className={styles.card}
-            href="https://github.com/rainbow-me/rainbowkit/tree/main/examples"
-          >
-            <h2>RainbowKit Examples &rarr;</h2>
-            <p>Discover boilerplate example RainbowKit projects.</p>
-          </a>
-
-          <a className={styles.card} href="https://nextjs.org/docs">
-            <h2>Next.js Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a
-            className={styles.card}
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-          >
-            <h2>Next.js Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            className={styles.card}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
+        <button onClick={() => sendSerializedTransaction()}>
+          Send Serialized transaction
+        </button>
       </main>
-
-      <footer className={styles.footer}>
-        <a href="https://rainbow.me" rel="noopener noreferrer" target="_blank">
-          Made with ❤️ by your frens at 🌈
-        </a>
-      </footer>
     </div>
   );
 };
